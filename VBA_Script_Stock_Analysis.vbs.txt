@@ -1,0 +1,106 @@
+Sub stock_analysis()
+
+Dim ws As Variant
+Dim lastRow, Count As Integer
+Dim price_opening, stock_volume, max_increase, max_decrease, max_stock_volume As Double
+
+
+'loop through all sheets
+For Each ws In Worksheets
+    
+    'find last row in each sheet
+    lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+    
+    'add headers for results in each sheet
+    ws.Cells(1, "j").Value = "Ticker"
+    ws.Cells(1, "k").Value = "Yearly Change"
+    ws.Cells(1, "l").Value = "Percent Change"
+    ws.Cells(1, "m").Value = "Total Stock Volume"
+    
+    ws.Cells(1, "p").Value = "Ticker"
+    ws.Cells(1, "q").Value = "Value"
+    ws.Cells(2, "o").Value = "Greatest % Increase"
+    ws.Cells(3, "o").Value = "Greatest % Decrease"
+    ws.Cells(4, "o").Value = "Greatest Total Volume"
+    
+    'initializing values
+    price_opening = ws.Cells(2, "C").Value
+    stock_volume = 0
+    max_increase = 0
+    max_decrease = 0
+    max_stockvolume = 0
+    
+    'initial row number where results will be logged, row number will be increased by 1
+    Count = 2
+    
+    'loop through the rows in the sheet
+    For i = 2 To lastRow
+        
+        'cumulative stock volume for each ticker
+        stock_volume = stock_volume + ws.Cells(i, "g").Value
+        
+        If ws.Cells(i, 1).Value <> ws.Cells(i + 1, 1).Value Then
+            
+            'writing Ticker summary to the result cells
+            ws.Cells(Count, "j").Value = ws.Cells(i, 1).Value
+            price_closing = ws.Cells(i, "f").Value
+            ws.Cells(Count, "k").Value = price_closing - price_opening
+            
+            If ws.Cells(Count, "k").Value < 0 Then
+                ws.Cells(Count, "k").Interior.ColorIndex = 3
+            Else
+                ws.Cells(Count, "k").Interior.ColorIndex = 4
+            End If
+            
+            'making sure not dividing by zero
+            If price_opening > 0 Then
+                ws.Cells(Count, "l").Value = (price_closing - price_opening) / price_opening
+                ws.Cells(Count, "l").NumberFormat = "0.00%"
+            Else
+                ws.Cells(Count, "l").Value = 0
+            End If
+            
+            ws.Cells(Count, "m").Value = stock_volume
+            
+            'conditionals for greatest increase, decrease and stock volume
+            If ws.Cells(Count, "l").Value > max_increase Then
+                max_increase = ws.Cells(Count, "l").Value
+                max_ticker = ws.Cells(Count, "j").Value
+            End If
+            
+            If ws.Cells(Count, "l").Value < max_decrease Then
+                max_decrease = ws.Cells(Count, "l").Value
+                max_decrease_ticker = ws.Cells(Count, "j").Value
+            End If
+            
+            If ws.Cells(Count, "m").Value > max_stockvolume Then
+                max_stockvolume = ws.Cells(Count, "m").Value
+                max_volume_ticker = ws.Cells(Count, "j").Value
+            End If
+            
+            'reset values for the next ticker
+            Count = Count + 1
+            price_opening = ws.Cells(i + 1, "c").Value
+            stock_volume = 0
+        End If
+        
+    Next i
+
+    'writing results for greatest increase, decrease and stock volume
+    ws.Cells(2, "q").Value = max_increase
+    ws.Cells(2, "q").NumberFormat = "0.00%"
+    ws.Cells(2, "p").Value = max_ticker
+
+    ws.Cells(3, "q").Value = max_decrease
+    ws.Cells(3, "q").NumberFormat = "0.00%"
+    ws.Cells(3, "p").Value = max_decrease_ticker
+
+    ws.Cells(4, "q").Value = max_stockvolume
+    ws.Cells(4, "q").NumberFormat = "General"
+    ws.Cells(4, "p").Value = max_volume_ticker
+
+Next ws
+
+End Sub
+
+
